@@ -50,7 +50,7 @@ void ROS_IGTL_Test::transformCallback(const ros_igtl_bridge::igtltransform::Cons
 	igtl::MatrixToQuaternion(igtlmatrix,quaternion);
 
 	quaternion[0] = msg->transform.rotation.x;
-    quaternion[1] = msg->transform.rotation.y;
+	quaternion[1] = msg->transform.rotation.y;
 	quaternion[2] = msg->transform.rotation.z;
 	quaternion[3] = msg->transform.rotation.w;
 	
@@ -90,9 +90,49 @@ void ROS_IGTL_Test::polydataCallback(const ros_igtl_bridge::igtlpolydata::ConstP
 	std::cout<<"Number of Strips "<<polydata->GetNumberOfStrips()<<std::endl;
 	Show_Polydata(polydata);
 }
+
+//----------------------------------------------------------------------
+void ROS_IGTL_Test::generateRandomString(int size, std::string& str)
+{
+  const char alphabets[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  int nalphabets = sizeof(alphabets) - 1;
+
+  str.clear();
+  for (int i = 0; i < size; i ++)
+    {
+      str += alphabets[rand() % nalphabets];
+    }
+}
+
 //----------------------------------------------------------------------
 void ROS_IGTL_Test::test_sending()
 {
+
+        int nIter = 1000;
+	int rate  = 30; // Hz
+        nh->getParam("/test_num_iterations",  nIter);
+        nh->getParam("/test_rate",            rate);
+
+	bool testTransform  = true;
+	bool testPoint      = true;
+	bool testPointCloud = true;
+	bool testString     = true;
+	bool testPoly       = true;
+
+	nh->getParam("/test_transform",  testTransform );
+        nh->getParam("/test_point",      testPoint     );
+        nh->getParam("/test_pointcloud", testPointCloud);
+        nh->getParam("/test_string",     testString    );
+        nh->getParam("/test_poly",       testPoly      );
+
+	int sizeString     = 10;
+	int sizePointCloud = 100;
+        nh->getParam("/test_size_string",     sizeString);
+        nh->getParam("/test_size_pointcloud", sizePointCloud);
+
+	int iterCount;
+	ros::Rate r(rate);
+
 	srand((unsigned int)time(NULL));
 	
 	// wait for subscribers
@@ -109,89 +149,147 @@ void ROS_IGTL_Test::test_sending()
 	
 	//-----------------------------------
 	// send transform
-	ros_igtl_bridge::igtltransform transform_msg;
-	igtl::Matrix4x4 igtlmatrix;
-	igtl::IdentityMatrix(igtlmatrix);
-	
-	igtlmatrix[0][3] = (float)rand()/(float)(RAND_MAX) * 10;
-	igtlmatrix[1][3] = (float)rand()/(float)(RAND_MAX) * 10;
-	igtlmatrix[2][3] = (float)rand()/(float)(RAND_MAX) * 10;
-
-	float quaternion [4];
-	igtl::MatrixToQuaternion(igtlmatrix,quaternion);
-
-	transform_msg.transform.translation.x = igtlmatrix[0][3];
-	transform_msg.transform.translation.y = igtlmatrix[1][3];
-	transform_msg.transform.translation.z = igtlmatrix[2][3];
-	transform_msg.transform.rotation.x = quaternion[0];
-	transform_msg.transform.rotation.y = quaternion[1];
-	transform_msg.transform.rotation.z = quaternion[2];
-	transform_msg.transform.rotation.w = quaternion[3];
-	
-	transform_msg.name = "ROS_IGTL_Test_Transform";
-	
-	// publish to topic
-	transform_pub.publish(transform_msg);
+	if (testTransform)
+	  {
+	    ros_igtl_bridge::igtltransform transform_msg;
+	    igtl::Matrix4x4 igtlmatrix;
+	    
+	    iterCount = nIter;
+	    while (iterCount > 0)
+	      {
+		igtl::IdentityMatrix(igtlmatrix);
+	    
+		igtlmatrix[0][3] = (float)rand()/(float)(RAND_MAX) * 10;
+		igtlmatrix[1][3] = (float)rand()/(float)(RAND_MAX) * 10;
+		igtlmatrix[2][3] = (float)rand()/(float)(RAND_MAX) * 10;
+		
+		float quaternion [4];
+		igtl::MatrixToQuaternion(igtlmatrix,quaternion);
+		
+		transform_msg.transform.translation.x = igtlmatrix[0][3];
+		transform_msg.transform.translation.y = igtlmatrix[1][3];
+		transform_msg.transform.translation.z = igtlmatrix[2][3];
+		transform_msg.transform.rotation.x = quaternion[0];
+		transform_msg.transform.rotation.y = quaternion[1];
+		transform_msg.transform.rotation.z = quaternion[2];
+		transform_msg.transform.rotation.w = quaternion[3];
+		
+		transform_msg.name = "ROS_IGTL_Test_Transform";
+		transform_msg.header.stamp = ros::Time::now();
+		
+		// publish to topic
+		transform_pub.publish(transform_msg);
+		r.sleep();
+		iterCount --;
+	      }
+	  }
 	
 	//-----------------------------------
 	// send points
 
-
-	float max = 50.0;
-	std::string point_name = "ROS_IGTL_Test_Point";
-	ros_igtl_bridge::igtlpoint point_msg;
-	
-	point_msg.pointdata.x = (float)rand()/(float)(RAND_MAX) * max;
-	point_msg.pointdata.y = (float)rand()/(float)(RAND_MAX) * max;
-	point_msg.pointdata.z = (float)rand()/(float)(RAND_MAX) * max;
-	point_msg.name = point_name;
-
-	point_pub.publish(point_msg);
+	if (testPoint)
+	  {
+	    float max = 50.0;
+	    std::string point_name = "ROS_IGTL_Test_Point";
+	    ros_igtl_bridge::igtlpoint point_msg;
+	    
+	    iterCount = nIter;
+	    while (iterCount > 0)
+	      {
+		point_msg.pointdata.x = (float)rand()/(float)(RAND_MAX) * max;
+		point_msg.pointdata.y = (float)rand()/(float)(RAND_MAX) * max;
+		point_msg.pointdata.z = (float)rand()/(float)(RAND_MAX) * max;
+		point_msg.name = point_name;
+		point_msg.header.stamp = ros::Time::now();
+		
+		point_pub.publish(point_msg);
+		r.sleep();
+		iterCount --;
+	      }
+	  }
 	
 	//-----------------------------------
 	// send pointcloud
 
-	int npoints = 20;
-	std::string points_name = "ROS_IGTL_Test_Pointcloud";
-	ros_igtl_bridge::igtlpointcloud points_msg;
-	points_msg.pointdata.resize(npoints);
-	for (int i = 0; i < npoints; i ++)
-	{
-		points_msg.pointdata[i].x = (float)rand()/(float)(RAND_MAX) * max;
-		points_msg.pointdata[i].y = (float)rand()/(float)(RAND_MAX) * max;
-		points_msg.pointdata[i].z = (float)rand()/(float)(RAND_MAX) * max;
+	if (testPointCloud)
+	  {
+	    int npoints = sizePointCloud;
+	    float max = 50.0;
+	    std::string points_name = "ROS_IGTL_Test_Pointcloud";
+	    ros_igtl_bridge::igtlpointcloud points_msg;
+	    points_msg.pointdata.resize(npoints);
+	    
+	    iterCount = nIter;
+	    while (iterCount > 0)
+	      {
+		for (int i = 0; i < npoints; i ++)
+		  {
+		    points_msg.pointdata[i].x = (float)rand()/(float)(RAND_MAX) * max;
+		    points_msg.pointdata[i].y = (float)rand()/(float)(RAND_MAX) * max;
+		    points_msg.pointdata[i].z = (float)rand()/(float)(RAND_MAX) * max;
+		    
+		  }
+		points_msg.name = points_name;	
+		points_msg.header.stamp = ros::Time::now();
 		
-	}
-	points_msg.name = points_name;	
-	pointcloud_pub.publish(points_msg);
-	
+		pointcloud_pub.publish(points_msg);
+		r.sleep();
+		iterCount --;
+	      }
+	  }
+
 	// -----------------------------------------------------------------
 	// send string
-	
-	ros_igtl_bridge::igtlstring string_msg;
-	string_msg.name = "ROS_IGTL_Test_String";
-	string_msg.data = "Test1";
-	string_pub.publish(string_msg);
-	
+	if (testString)
+	  {
+	    ros_igtl_bridge::igtlstring string_msg;
+	    string_msg.name = "ROS_IGTL_Test_String";
+	    
+	    iterCount = nIter;
+	    std::string str;
+	    while (iterCount > 0)
+	      {
+		str.clear();
+		generateRandomString(sizeString, str);
+		//string_msg.data = "Test1";
+		string_msg.data = str;
+		string_msg.header.stamp = ros::Time::now();
+		string_pub.publish(string_msg);
+		r.sleep();
+		iterCount --;
+	      }
+	  }
+
 	// -----------------------------------------------------------------
 	// send PD
-	std::string test_pd;
-	if(nh->getParam("/test_pd",test_pd))
-	{
+	if (testPoly)
+	  {
+	    std::string test_pd;
+	    if(nh->getParam("/test_pd_file",test_pd))
+	      {
 		vtkSmartPointer<vtkPolyData> polydata;
 		vtkSmartPointer<vtkPolyDataReader> polydata_reader = vtkSmartPointer<vtkPolyDataReader>::New();
 		polydata_reader->SetFileName(test_pd.c_str());
 		polydata_reader->Update();
 		polydata = polydata_reader->GetOutput();
 		
-		ros_igtl_bridge::igtlpolydata::Ptr polydata_msg (new ros_igtl_bridge::igtlpolydata()); 
-		*polydata_msg =  ROS_IGTL_Bridge::PolyDataToMsg("ROS_IGTL_Test_PolyData",polydata);
-		polydata_pub.publish(*polydata_msg);
-	}
+		iterCount = nIter;
+		while (iterCount > 0)
+		  {
+		    ros_igtl_bridge::igtlpolydata::Ptr polydata_msg (new ros_igtl_bridge::igtlpolydata()); 
+		    *polydata_msg =  ROS_IGTL_Bridge::PolyDataToMsg("ROS_IGTL_Test_PolyData",polydata);
+		    polydata_msg->header.stamp = ros::Time::now();
+		    polydata_pub.publish(*polydata_msg);
+		    r.sleep();
+		    iterCount --;
+		  }
+	      }
+	  }
+
 	std::string test_oct;
-	if(nh->getParam("/test_oct",test_oct))
+	if(nh->getParam("/test_oct_file",test_oct))
 	{
-	//	PublishOCTScan(test_oct);
+	  //	PublishOCTScan(test_oct);
 	}
 }
 //----------------------------------------------------------------------
