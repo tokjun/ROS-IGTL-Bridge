@@ -13,9 +13,9 @@
    <param name="test_pointcloud" value="false" type="bool"/>
    <param name="test_string"     value="false" type="bool"/>
    <param name="test_poly"       value="false" type="bool"/>
-   <param name="test_image"      value="false" type="bool"/>
+   <param name="test_image"      value="true" type="bool"/>
 
-   <param name="test_num_iterations" value="300" type="int"/>
+   <param name="test_num_iterations" value="1000" type="int"/>
    <param name="test_rate" value="30" type="int"/>
    <param name="test_size_string" value="100" type="int"/>
    <param name="test_size_pointcloud" value="20000" type="int"/>

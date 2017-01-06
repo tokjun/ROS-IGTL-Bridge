@@ -373,6 +373,7 @@ void ROS_IGTL_Test::test_sending()
 	    size_t size = img_msg->step* img_msg->height * 3;
 	    img_msg->data.resize(size);
 	    
+	    iterCount = nIter;
 	    while (iterCount > 0)
 	      {
 		img_msg->header.stamp = ros::Time::now();
