@@ -67,7 +67,7 @@ public:
 	virtual void ConnectToIGTLServer();
 	
 	// PD Message Conversions
-	static ros_igtl_bridge::igtlpolydata PolyDataToMsg(const char* name,vtkSmartPointer<vtkPolyData> polydata);
+	static ros_igtl_bridge::igtlpolydata PolyDataToMsg(const char* name,vtkSmartPointer<vtkPolyData> polydata, std_msgs::Header hdr);
 	static void MsgToPolyData(const ros_igtl_bridge::igtlpolydata::ConstPtr& msg, vtkSmartPointer<vtkPolyData> polydata);
 	
 private:

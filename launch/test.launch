@@ -7,16 +7,20 @@
 
    </node>
 <!-- start the test -->
-   <param name="test_transform"  value="true" type="bool"/>
-   <param name="test_point"      value="true" type="bool"/>
-   <param name="test_pointcloud" value="true" type="bool"/>
-   <param name="test_string"     value="true" type="bool"/>
+   <param name="test_print_contents"  value="false" type="bool"/>		
+   <param name="test_transform"  value="false" type="bool"/>
+   <param name="test_point"      value="false" type="bool"/>
+   <param name="test_pointcloud" value="false" type="bool"/>
+   <param name="test_string"     value="false" type="bool"/>
    <param name="test_poly"       value="false" type="bool"/>
+   <param name="test_image"      value="false" type="bool"/>
 
-   <param name="test_num_iterations" value="100" type="int"/>
+   <param name="test_num_iterations" value="300" type="int"/>
    <param name="test_rate" value="30" type="int"/>
-   <param name="test_size_string" value="10000" type="int"/>
-   <param name="test_size_pointcloud" value="100" type="int"/>
+   <param name="test_size_string" value="100" type="int"/>
+   <param name="test_size_pointcloud" value="20000" type="int"/>
+   <param name="test_size_image_w" value="640" type="int"/>
+   <param name="test_size_image_h" value="480" type="int"/>
 
    <param name="test_pd_file" value="$(find ros_igtl_bridge)/testing/model.vtk" type="str"/>
    <param name="test_oct_file" value="$(find ros_igtl_bridge)/testing/oct_raw.cache" type="str"/>

@@ -13,7 +13,8 @@ ROS_IGTL_Test::ROS_IGTL_Test(int argc, char *argv[], const char* node_name)
 	transform_pub = nh->advertise<ros_igtl_bridge::igtltransform>("IGTL_TRANSFORM_OUT", 10);
 	polydata_pub = nh->advertise<ros_igtl_bridge::igtlpolydata>("IGTL_POLYDATA_OUT", 1);
 	string_pub = nh->advertise<ros_igtl_bridge::igtlstring>("IGTL_STRING_OUT", 15);
-	image_pub = nh->advertise<ros_igtl_bridge::igtlimage>("IGTL_IMAGE_OUT", 3);
+	//image_pub = nh->advertise<ros_igtl_bridge::igtlimage>("IGTL_IMAGE_OUT", 3);
+	image_pub = nh->advertise<sensor_msgs::Image>("IGTL_VIDEO_OUT", 3);
 	pointcloud_pub = nh->advertise<ros_igtl_bridge::igtlpointcloud>("IGTL_POINTCLOUD_OUT", 2);  
 	// declare subscriber
 	sub_point = nh->subscribe("IGTL_POINT_IN", 10, &ROS_IGTL_Test::pointCallback,this);  
@@ -21,6 +22,9 @@ ROS_IGTL_Test::ROS_IGTL_Test(int argc, char *argv[], const char* node_name)
 	sub_string = nh->subscribe("IGTL_STRING_IN", 20, &ROS_IGTL_Test::stringCallback,this); 
 	sub_image = nh->subscribe("IGTL_IMAGE_IN", 1, &ROS_IGTL_Test::imageCallback,this); 
 	sub_polydata = nh->subscribe("IGTL_POLYDATA_IN", 1, &ROS_IGTL_Test::polydataCallback,this); 
+
+	fPrintContents = true;
+	nh->getParam("/test_print_contents",  fPrintContents);
 
 	test_sending();
 	
@@ -41,6 +45,12 @@ void ROS_IGTL_Test::Run()
 void ROS_IGTL_Test::transformCallback(const ros_igtl_bridge::igtltransform::ConstPtr& msg)
 {
 	ROS_INFO("[ROS_IGTL_Test] Transform %s received: \n",msg->name.c_str());
+
+	double stamp = msg->header.stamp.toSec();
+	double current = ros::Time::now().toSec();
+	
+	double latency = current - stamp;
+	std::cout << "LATENCY: " << latency << std::endl;
 	
 	// convert msg to igtl matrix
 	igtl::Matrix4x4 igtlmatrix;
@@ -59,38 +69,84 @@ void ROS_IGTL_Test::transformCallback(const ros_igtl_bridge::igtltransform::Cons
 	igtlmatrix[0][3] = msg->transform.translation.x;
 	igtlmatrix[1][3] = msg->transform.translation.y;
 	igtlmatrix[2][3] = msg->transform.translation.z;
-			
-	igtl::PrintMatrix(igtlmatrix);
+	
+	if (fPrintContents)
+	  {
+	    igtl::PrintMatrix(igtlmatrix);
+	  }
 }
 //----------------------------------------------------------------------
 void ROS_IGTL_Test::pointCallback(const ros_igtl_bridge::igtlpoint::ConstPtr& msg)
 {
 	ROS_INFO("[ROS_IGTL_Test] Point %s received: \n",msg->name.c_str());
-	ROS_INFO("x = %f  y = %f  z = %f \n",msg->pointdata.x,msg->pointdata.y,msg->pointdata.z);
+	double stamp = msg->header.stamp.toSec();
+	double current = ros::Time::now().toSec();
+	double latency = current - stamp;
+	std::cout << "LATENCY: " << latency << std::endl;
+
+	if (fPrintContents)
+	  {
+	    ROS_INFO("x = %f  y = %f  z = %f \n",msg->pointdata.x,msg->pointdata.y,msg->pointdata.z);
+	  }
 }	
 //----------------------------------------------------------------------
 void ROS_IGTL_Test::stringCallback(const ros_igtl_bridge::igtlstring::ConstPtr& msg)
 {
 	ROS_INFO("[ROS_IGTL_Test] String %s received: \n",msg->name.c_str());
-	ROS_INFO("%s \n",msg->data.c_str());
+	double stamp = msg->header.stamp.toSec();
+	double current = ros::Time::now().toSec();
+	double latency = current - stamp;
+	std::cout << "LATENCY: " << latency << std::endl;
+
+	if (fPrintContents)
+	  {
+	    ROS_INFO("%s \n",msg->data.c_str());
+	  }
 }
 //----------------------------------------------------------------------
 void ROS_IGTL_Test::imageCallback(const sensor_msgs::Image::ConstPtr& msg)
 {
 	ROS_INFO("[ROS_IGTL_Test] Image received: \n");
-	ROS_INFO("Topic: /IGTL_IMAGE_IN  Use rviz for visualization!\n");
+	double stamp = msg->header.stamp.toSec();
+	double current = ros::Time::now().toSec();
+	double latency = current - stamp;
+	std::cout << "LATENCY: " << latency << std::endl;
+
+	if (fPrintContents)
+	  {
+	    ROS_INFO("Topic: /IGTL_IMAGE_IN  Use rviz for visualization!\n");
+	  }
 }
 //----------------------------------------------------------------------
 void ROS_IGTL_Test::polydataCallback(const ros_igtl_bridge::igtlpolydata::ConstPtr& msg)
 {
 	ROS_INFO("[ROS_IGTL_Test] PolyData %s received: \n",msg->name.c_str());
+	double stamp = msg->header.stamp.toSec();
+	double current = ros::Time::now().toSec();
+	double latency = current - stamp;
+	std::cout << "LATENCY: " << latency << std::endl;
+
 	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 	ROS_IGTL_Bridge::MsgToPolyData(msg,polydata);
-	std::cout<<"Number of Points "<<polydata->GetNumberOfPoints()<<std::endl;
-	std::cout<<"Number of Strips "<<polydata->GetNumberOfStrips()<<std::endl;
-	Show_Polydata(polydata);
-}
 
+	if (fPrintContents)
+	  {
+	    std::cout<<"Number of Points "<<polydata->GetNumberOfPoints()<<std::endl;
+	    std::cout<<"Number of Strips "<<polydata->GetNumberOfStrips()<<std::endl;
+	    Show_Polydata(polydata);
+	  }
+}
+//----------------------------------------------------------------------
+void ROS_IGTL_Test::generateRandomImageInt8(int size, char* ptr)
+{
+  char* p = ptr;
+  char* ptr_end = p + size;
+  while (p < ptr_end)
+    {
+    *p = rand() % 255;
+    p++;
+    }
+}
 //----------------------------------------------------------------------
 void ROS_IGTL_Test::generateRandomString(int size, std::string& str)
 {
@@ -104,6 +160,8 @@ void ROS_IGTL_Test::generateRandomString(int size, std::string& str)
     }
 }
 
+
+
 //----------------------------------------------------------------------
 void ROS_IGTL_Test::test_sending()
 {
@@ -114,21 +172,28 @@ void ROS_IGTL_Test::test_sending()
         nh->getParam("/test_rate",            rate);
 
 	bool testTransform  = true;
+
 	bool testPoint      = true;
 	bool testPointCloud = true;
 	bool testString     = true;
 	bool testPoly       = true;
+	bool testImage      = true;
 
 	nh->getParam("/test_transform",  testTransform );
         nh->getParam("/test_point",      testPoint     );
         nh->getParam("/test_pointcloud", testPointCloud);
         nh->getParam("/test_string",     testString    );
         nh->getParam("/test_poly",       testPoly      );
+        nh->getParam("/test_image",      testImage     );
 
 	int sizeString     = 10;
 	int sizePointCloud = 100;
+	int sizeImageWidth = 256;
+	int sizeImageHeight= 256;
         nh->getParam("/test_size_string",     sizeString);
         nh->getParam("/test_size_pointcloud", sizePointCloud);
+	nh->getParam("/test_size_image_w",    sizeImageWidth);
+	nh->getParam("/test_size_image_h",    sizeImageHeight);
 
 	int iterCount;
 	ros::Rate r(rate);
@@ -277,12 +342,46 @@ void ROS_IGTL_Test::test_sending()
 		while (iterCount > 0)
 		  {
 		    ros_igtl_bridge::igtlpolydata::Ptr polydata_msg (new ros_igtl_bridge::igtlpolydata()); 
-		    *polydata_msg =  ROS_IGTL_Bridge::PolyDataToMsg("ROS_IGTL_Test_PolyData",polydata);
-		    polydata_msg->header.stamp = ros::Time::now();
+		    std_msgs::Header hdr;
+		    hdr.stamp = ros::Time::now();
+		    *polydata_msg =  ROS_IGTL_Bridge::PolyDataToMsg("ROS_IGTL_Test_PolyData",polydata,hdr);
 		    polydata_pub.publish(*polydata_msg);
 		    r.sleep();
 		    iterCount --;
 		  }
+	      }
+	  }
+
+
+	// -----------------------------------------------------------------
+	// send Image
+	if (testImage)
+	  {
+	    sensor_msgs::ImagePtr img_msg  (new sensor_msgs::Image()) ;
+	    
+	    float spacing[] = {1,1,1};
+	    img_msg->height = sizeImageHeight;
+	    img_msg->width = sizeImageWidth;
+	    
+	    ROS_INFO("h %d",img_msg->height);
+	    ROS_INFO("w %d",img_msg->width);
+	    
+	    img_msg->encoding = "rgb8";
+	    img_msg->is_bigendian = false;
+	    img_msg->step = sizeImageWidth;
+	    ROS_INFO("s %d",img_msg->step);
+	    size_t size = img_msg->step* img_msg->height * 3;
+	    img_msg->data.resize(size);
+	    
+	    while (iterCount > 0)
+	      {
+		img_msg->header.stamp = ros::Time::now();
+		//memcpy((char*)(&img_msg->data[0]),imgMsg->GetScalarPointer(),size); 
+		generateRandomImageInt8(size, (char*)&img_msg->data[0]);
+		image_pub.publish(img_msg);
+
+		r.sleep();
+		iterCount --;
 	      }
 	  }
 

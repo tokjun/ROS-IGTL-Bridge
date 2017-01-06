@@ -281,6 +281,15 @@ void ROS_IGTL_Bridge::ReceiveTransform(igtl::MessageHeader * header)
 
 	if (c & igtl::MessageHeader::UNPACK_BODY) 
 	{ 
+	        // Time stamp
+	        igtl::TimeStamp::Pointer ts;
+		ts = igtl::TimeStamp::New();
+		transMsg->GetTimeStamp(ts);
+
+		igtlUint32 sec;
+		igtlUint32 nsec;
+		ts->GetTimeStamp(&sec, &nsec);
+
 		// retrive the transform data
 		ros_igtl_bridge::igtltransform msg;
 		igtl::Matrix4x4 igtlmatrix;
@@ -294,14 +303,15 @@ void ROS_IGTL_Bridge::ReceiveTransform(igtl::MessageHeader * header)
 		float quaternion [4];
 		igtl::MatrixToQuaternion(igtlmatrix,quaternion);
 
-
 		msg.transform.rotation.x = quaternion[0];
 		msg.transform.rotation.y = quaternion[1];
 		msg.transform.rotation.z = quaternion[2];
 		msg.transform.rotation.w = quaternion[3];
 		
 		msg.name = transMsg->GetDeviceName();
-		
+		msg.header.stamp.sec = sec;
+		msg.header.stamp.nsec = nsec;
+
 		// publish to topic
 		transform_pub.publish(msg);
 	}
@@ -384,6 +394,15 @@ void ROS_IGTL_Bridge::ReceivePoints(igtl::MessageHeader * header)
 
 	if (npoints > 0)
 	{
+	        // Time stamp
+	        igtl::TimeStamp::Pointer ts;
+		ts = igtl::TimeStamp::New();
+		pointMsg->GetTimeStamp(ts);
+
+		igtlUint32 sec;
+		igtlUint32 nsec;
+		ts->GetTimeStamp(&sec, &nsec);
+
 		for (int i = 0; i < npoints; i ++)
 		{
 			igtlFloat32 point[3];
@@ -397,6 +416,8 @@ void ROS_IGTL_Bridge::ReceivePoints(igtl::MessageHeader * header)
 			msg.pointdata.y = point[1];
 			msg.pointdata.z = point[2];
 			msg.name = elem->GetName();
+			msg.header.stamp.sec = sec;
+			msg.header.stamp.nsec = nsec;
 
 			point_pub.publish(msg);
 		}
@@ -410,8 +431,8 @@ void ROS_IGTL_Bridge::ReceivePoints(igtl::MessageHeader * header)
 //----------------------------------------------------------------------
 void ROS_IGTL_Bridge::SendImage(const ros_igtl_bridge::igtlimage::ConstPtr imgmsg)
 {
-    int   size[]     = {imgmsg->z_steps,imgmsg->y_steps,imgmsg->x_steps};       // image dimension
-    float spacing[]  = {imgmsg->z_spacing,imgmsg->y_spacing,imgmsg->x_spacing};     // spacing (mm/pixel) 
+        int   size[]     = {imgmsg->z_steps,imgmsg->y_steps,imgmsg->x_steps};       // image dimension
+	float spacing[]  = {imgmsg->z_spacing,imgmsg->y_spacing,imgmsg->x_spacing};     // spacing (mm/pixel) 
 	int   scalarType = igtl::ImageMessage::TYPE_UINT8;
 
 	std_msgs::Header hdr = imgmsg->header;
@@ -445,29 +466,38 @@ void ROS_IGTL_Bridge::SendImage(const ros_igtl_bridge::igtlimage::ConstPtr imgms
 //----------------------------------------------------------------------
 void ROS_IGTL_Bridge::SendVideo(const sensor_msgs::Image::ConstPtr imgmsg)
 {
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(imgmsg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-      ROS_ERROR("cv_bridge exception: %s", e.what());
-      return;
-    }
 
-	cv::Mat img; 
-    cvtColor(cv_ptr->image,img, CV_RGB2GRAY);
-
-	cv_bridge::CvImage img_bridge;
-	sensor_msgs::Image img_msg; 
-
-	std_msgs::Header header; 
-	header.stamp = ros::Time::now(); 
-	img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::MONO8, img);
-	img_bridge.toImageMsg(img_msg); 
-	
-	sensor_msgs::Image::Ptr msg = boost::make_shared<sensor_msgs::Image>(img_msg);
+//    cv_bridge::CvImagePtr cv_ptr;
+//    try
+//    {
+//        cv_ptr = cv_bridge::toCvCopy(imgmsg, sensor_msgs::image_encodings::BGR8);
+//    }
+//    catch (cv_bridge::Exception& e)
+//    {
+//      ROS_ERROR("cv_bridge exception: %s", e.what());
+//      return;
+//    }
+//
+//    cv::Mat img; 
+//    cvtColor(cv_ptr->image,img, CV_RGB2GRAY);
+//
+//	cv_bridge::CvImage img_bridge;
+//	sensor_msgs::Image img_msg; 
+//
+//	//std_msgs::Header header; 
+//	//header.stamp = ros::Time::now(); 
+//
+//	if (imgmsg->encoding.compare("mono8") == 0)
+//	  {
+//	    img_bridge = cv_bridge::CvImage(imgmsg->header, sensor_msgs::image_encodings::MONO8, cv_ptr->image);
+//	  }
+//	else if (imgmsg->encoding.compare("rgb8") == 0)
+//	  {
+//	    img_bridge = cv_bridge::CvImage(imgmsg->header, sensor_msgs::image_encodings::RGB8, cv_ptr->image);
+//	  }
+//	img_bridge.toImageMsg(img_msg); 
+//	
+//	sensor_msgs::Image::Ptr msg = boost::make_shared<sensor_msgs::Image>(img_msg);
 	
 	/* debug window
 	static const char WINDOW[] = "Image window";
@@ -475,7 +505,7 @@ void ROS_IGTL_Bridge::SendVideo(const sensor_msgs::Image::ConstPtr imgmsg)
 	cv::imshow(WINDOW, img);
 	cv::waitKey(3);
 	*/
-	
+
 	int   size[]     = {imgmsg->width,imgmsg->height,1};       // image dimension
 	float spacing[]  = {1,1,1};     // spacing (mm/pixel) 
 	int   scalarType = igtl::ImageMessage::TYPE_UINT8;
@@ -488,20 +518,28 @@ void ROS_IGTL_Bridge::SendVideo(const sensor_msgs::Image::ConstPtr imgmsg)
 	igtl::ImageMessage::Pointer imgMsg = igtl::ImageMessage::New();
 	imgMsg->SetDimensions(size);
 	imgMsg->SetSpacing(spacing);
+	if (imgmsg->encoding.compare("rgb8") == 0)
+	  {
+	    imgMsg->SetNumComponents(3);
+	  }
+	else
+	  {
+	    imgMsg->SetNumComponents(1);
+	  }
 	imgMsg->SetScalarType(scalarType);
 	imgMsg->SetCoordinateSystem(2);
 	imgMsg->SetDeviceName("ROS_IGTL_Bridge_Video");
 	imgMsg->SetOrigin(0,0,0);
 	imgMsg->AllocateScalars();
 	//------------------------------------------------------------
-	std::cout<< msg->data.size()<<std::endl;
-	std::cout<< msg->step<<std::endl;
-	std::cout<< msg->height<<std::endl;
-	std::cout<< msg->width<<std::endl;
+	//std::cout<< imgmsg->data.size()<<std::endl;
+	//std::cout<< imgmsg->step<<std::endl;
+	//std::cout<< imgmsg->height<<std::endl;
+	//std::cout<< imgmsg->width<<std::endl;
 
-	image_pub.publish(msg);
+	//image_pub.publish(msg);
 
-	memcpy(imgMsg->GetScalarPointer(),(char*)(&msg->data[0]),msg->data.size());
+	//memcpy(imgMsg->GetScalarPointer(),(char*)(&imgmsg->data[0]),imgmsg->data.size());
 
 	igtl::Matrix4x4 matrixa;
 	igtl::IdentityMatrix(matrixa);
@@ -533,6 +571,15 @@ void ROS_IGTL_Bridge::ReceiveImage(igtl::MessageHeader * header)
 		return;
 	}
 
+	// Time stamp
+	igtl::TimeStamp::Pointer ts;
+	ts = igtl::TimeStamp::New();
+	imgMsg->GetTimeStamp(ts);
+	
+	igtlUint32 sec;
+	igtlUint32 nsec;
+	ts->GetTimeStamp(&sec, &nsec);
+
 	std::vector<uint8_t> image;
 	sensor_msgs::ImagePtr img_msg  (new sensor_msgs::Image()) ;
 			
@@ -546,15 +593,26 @@ void ROS_IGTL_Bridge::ReceiveImage(igtl::MessageHeader * header)
 
 	ROS_INFO("h %d",img_msg->height);
 	ROS_INFO("w %d",img_msg->width);
-	
-	img_msg->encoding = "mono8";
+
+	int ncomp = 1;
+	if (imgMsg->GetNumComponents() == 3)
+	  {
+	    img_msg->encoding = "rgb8";
+	    ncomp = 3;
+	  }
+	else
+	  {
+	    img_msg->encoding = "mono8";
+	  }
 	img_msg->is_bigendian = false;
 	img_msg->step = imgsize[0];
 	ROS_INFO("s %d",img_msg->step);
-	size_t size = img_msg->step* img_msg->height;
+	size_t size = img_msg->step* img_msg->height*ncomp;
 	img_msg->data.resize(size);
 	
 	memcpy((char*)(&img_msg->data[0]),imgMsg->GetScalarPointer(),size); 
+	img_msg->header.stamp.sec = sec;
+	img_msg->header.stamp.nsec = nsec;
 
 	image_pub.publish(img_msg);
 }
@@ -704,6 +762,15 @@ void ROS_IGTL_Bridge::ReceivePolyData(igtl::MessageHeader * header, vtkSmartPoin
 	
 	const char* name = polyDataMsg->GetDeviceName();
 	
+	// Time stamp
+	igtl::TimeStamp::Pointer ts;
+	ts = igtl::TimeStamp::New();
+	polyDataMsg->GetTimeStamp(ts);
+	
+	igtlUint32 sec;
+	igtlUint32 nsec;
+	ts->GetTimeStamp(&sec, &nsec);
+
 	// Points
 	igtl::PolyDataPointArray::Pointer pointsArray = polyDataMsg->GetPoints();
 	int npoints = pointsArray->GetNumberOfPoints();
@@ -816,7 +883,11 @@ void ROS_IGTL_Bridge::ReceivePolyData(igtl::MessageHeader * header, vtkSmartPoin
 	
 	poly->Modified();
 	//Show_Polydata(poly);
-	polydata_pub.publish(PolyDataToMsg(name,poly));
+	std_msgs::Header hdr;
+	hdr.stamp.sec = sec;
+	hdr.stamp.nsec = nsec;
+
+	polydata_pub.publish(PolyDataToMsg(name,poly,hdr));
 
 }
 //----------------------------------------------------------------------
@@ -852,9 +923,21 @@ void ROS_IGTL_Bridge::ReceiveString(igtl::MessageHeader * header)
 	
 	if (b & igtl::MessageHeader::UNPACK_BODY) 
 	{
+	        // Time stamp
+	        igtl::TimeStamp::Pointer ts;
+		ts = igtl::TimeStamp::New();
+		stringMsg->GetTimeStamp(ts);
+		
+		igtlUint32 sec;
+		igtlUint32 nsec;
+		ts->GetTimeStamp(&sec, &nsec);
+
 		//std::cout<< "Received String: "<<stringMsg->GetString()<<std::endl;     
 		msg.name = stringMsg->GetDeviceName();
 		msg.data = stringMsg->GetString();
+		msg.header.stamp.sec = sec;
+		msg.header.stamp.nsec = nsec;
+
 		string_pub.publish(msg);
 	}
 	else 
@@ -865,11 +948,12 @@ void ROS_IGTL_Bridge::ReceiveString(igtl::MessageHeader * header)
 }
 // Polydata/Msg conversions
 //----------------------------------------------------------------------
-ros_igtl_bridge::igtlpolydata ROS_IGTL_Bridge::PolyDataToMsg(const char* name, vtkSmartPointer<vtkPolyData> polydata )
+ros_igtl_bridge::igtlpolydata ROS_IGTL_Bridge::PolyDataToMsg(const char* name, vtkSmartPointer<vtkPolyData> polydata, std_msgs::Header hdr)
 {
 	ros_igtl_bridge::igtlpolydata msg;
 
-	msg.name=name;
+	msg.name = name;
+	msg.header = hdr;
 	
 	// points
 	double *point;

@@ -75,6 +75,8 @@ private:
 	ros::Subscriber sub_polydata;
 	ros::Subscriber sub_image;
 	ros::Subscriber sub_string;
+	
+	bool fPrintContents;
 
 	virtual void pointCallback(const ros_igtl_bridge::igtlpoint::ConstPtr& msg);
 	virtual void transformCallback(const ros_igtl_bridge::igtltransform::ConstPtr& msg);
@@ -83,6 +85,7 @@ private:
 	virtual void polydataCallback(const ros_igtl_bridge::igtlpolydata::ConstPtr& msg);
 
 	void generateRandomString(int size, std::string& str);
+	void generateRandomImageInt8(int size, char* ptr);
 
 };
 #endif 
