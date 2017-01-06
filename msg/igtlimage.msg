@@ -1,4 +1,5 @@
 # Image Message
+Header header
 string name
 # Steps
 int32 x_steps           

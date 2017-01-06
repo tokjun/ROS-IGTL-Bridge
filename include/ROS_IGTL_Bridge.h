@@ -93,17 +93,17 @@ private:
 	virtual void transformCallback(const ros_igtl_bridge::igtltransform::ConstPtr& msg);
 	virtual void stringCallback(const ros_igtl_bridge::igtlstring::ConstPtr& msg);
 	virtual void imageCallback(const ros_igtl_bridge::igtlimage::ConstPtr& msg);
-	virtual void videoCallback(sensor_msgs::Image::ConstPtr msg);
+	virtual void videoCallback(const sensor_msgs::Image::ConstPtr msg);
 	virtual void polydataCallback(const ros_igtl_bridge::igtlpolydata::ConstPtr& msg);
 
 	// Sending
-	virtual void SendTransform(const char* name, igtl::Matrix4x4 &sendMatrix);
-	virtual void SendPoint (const char* name,geometry_msgs::Point point);
+	virtual void SendTransform(const char* name, igtl::Matrix4x4 &sendMatrix, std_msgs::Header hdr);
+	virtual void SendPoint (const ros_igtl_bridge::igtlpoint::ConstPtr& msg);
 	virtual void SendPointCloud (const ros_igtl_bridge::igtlpointcloud::ConstPtr& msg);
-	virtual void SendImage(ros_igtl_bridge::igtlimage::ConstPtr imgmsg);
-	virtual void SendVideo(sensor_msgs::Image::ConstPtr imgmsg);
-	virtual void SendPolyData(const char* name,vtkSmartPointer<vtkPolyData> polydata);
-	virtual void SendString(const char* name, std::string stringmsg);
+	virtual void SendImage(const ros_igtl_bridge::igtlimage::ConstPtr imgmsg);
+	virtual void SendVideo(const sensor_msgs::Image::ConstPtr imgmsg);
+	virtual void SendPolyData(const ros_igtl_bridge::igtlpolydata::ConstPtr& msg);
+	virtual void SendString(const ros_igtl_bridge::igtlstring::ConstPtr& msg);
 
 	// Receiving
 	virtual void ReceivePoints(igtl::MessageHeader * header);

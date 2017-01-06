@@ -163,12 +163,13 @@ void ROS_IGTL_Bridge::transformCallback(const ros_igtl_bridge::igtltransform::Co
 	Transformation[2][3] = msg->transform.translation.z;
 	
 	// send transform
-	SendTransform(msg->name.c_str(),Transformation);
+	SendTransform(msg->name.c_str(),Transformation, msg->header);
 }
 //----------------------------------------------------------------------
 void ROS_IGTL_Bridge::pointCallback(const ros_igtl_bridge::igtlpoint::ConstPtr& msg)
 {
-	SendPoint(msg->name.c_str(),msg->pointdata);
+       //SendPoint(msg->name.c_str(),msg->pointdata);
+       SendPoint(msg);
 }	
 //----------------------------------------------------------------------	
 void ROS_IGTL_Bridge::pointcloudCallback(const ros_igtl_bridge::igtlpointcloud::ConstPtr& msg)
@@ -178,7 +179,8 @@ void ROS_IGTL_Bridge::pointcloudCallback(const ros_igtl_bridge::igtlpointcloud::
 //----------------------------------------------------------------------
 void ROS_IGTL_Bridge::stringCallback(const ros_igtl_bridge::igtlstring::ConstPtr& msg)
 {
-	SendString(msg->name.c_str(), msg->data);
+        //SendString(msg->name.c_str(), msg->data);
+        SendString(msg);
 }
 //----------------------------------------------------------------------
 void ROS_IGTL_Bridge::imageCallback(const ros_igtl_bridge::igtlimage::ConstPtr& msg)
@@ -186,16 +188,17 @@ void ROS_IGTL_Bridge::imageCallback(const ros_igtl_bridge::igtlimage::ConstPtr& 
 	SendImage(msg);
 }
 //----------------------------------------------------------------------
-void ROS_IGTL_Bridge::videoCallback(sensor_msgs::Image::ConstPtr msg)
+void ROS_IGTL_Bridge::videoCallback(const sensor_msgs::Image::ConstPtr msg)
 {
 	SendVideo(msg);
 }
 //----------------------------------------------------------------------
 void ROS_IGTL_Bridge::polydataCallback(const ros_igtl_bridge::igtlpolydata::ConstPtr& msg)
 {
-	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
-	MsgToPolyData(msg,polydata);
-	SendPolyData(msg->name.c_str(),polydata);
+	//vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+	//MsgToPolyData(msg,polydata);
+	//SendPolyData(msg->name.c_str(),polydata);
+	SendPolyData(msg);
 }
 // ----- receiving from slicer -----------------------------------------
 //----------------------------------------------------------------------
@@ -246,13 +249,18 @@ void ROS_IGTL_Bridge::IGTLReceiverThread()
 }
 // sending / receiving methods
 //----------------------------------------------------------------------
-void ROS_IGTL_Bridge::SendTransform(const char* name, igtl::Matrix4x4 &sendMatrix)
+void ROS_IGTL_Bridge::SendTransform(const char* name, igtl::Matrix4x4 &sendMatrix, std_msgs::Header hdr)
 {
+        igtl::TimeStamp::Pointer ts;
+	ts = igtl::TimeStamp::New();
+	ts->SetTime(hdr.stamp.sec, hdr.stamp.nsec);
+
 	// generate message
 	igtl::TransformMessage::Pointer transMsg;
 	transMsg = igtl::TransformMessage::New();
 	transMsg->SetDeviceName(name);
 	transMsg->SetMatrix(sendMatrix);
+	transMsg->SetTimeStamp(ts);
 	transMsg->Pack();
 	socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
 }
@@ -304,16 +312,24 @@ void ROS_IGTL_Bridge::ReceiveTransform(igtl::MessageHeader * header)
 	}
 }
 //----------------------------------------------------------------------
-void ROS_IGTL_Bridge::SendPoint (const char* name,geometry_msgs::Point point)
+void ROS_IGTL_Bridge::SendPoint (const ros_igtl_bridge::igtlpoint::ConstPtr& msg)
 {
+        geometry_msgs::Point point = msg->pointdata;
+
+	std_msgs::Header hdr = msg->header;
+        igtl::TimeStamp::Pointer ts;
+	ts = igtl::TimeStamp::New();
+	ts->SetTime(hdr.stamp.sec, hdr.stamp.nsec);
+
  	igtl::PointMessage::Pointer pointMsg = igtl::PointMessage::New();
- 	pointMsg->SetDeviceName(name);
+ 	pointMsg->SetDeviceName(msg->name.c_str());
  
 	igtl::PointElement::Pointer pointE; 
 	pointE = igtl::PointElement::New();
 	pointE->SetPosition(point.x, point.y,point.z);
 		
 	pointMsg->AddPointElement(pointE);
+	pointMsg->SetTimeStamp(ts);
 
 	pointMsg->Pack();
 	socket->Send(pointMsg->GetPackPointer(), pointMsg->GetPackSize());
@@ -321,6 +337,11 @@ void ROS_IGTL_Bridge::SendPoint (const char* name,geometry_msgs::Point point)
 //----------------------------------------------------------------------
 void ROS_IGTL_Bridge::SendPointCloud (const ros_igtl_bridge::igtlpointcloud::ConstPtr& msg)
 {
+        std_msgs::Header hdr = msg->header;
+        igtl::TimeStamp::Pointer ts;
+	ts = igtl::TimeStamp::New();
+	ts->SetTime(hdr.stamp.sec, hdr.stamp.nsec);
+
 	int pcl_size = msg->pointdata.size();
 	if (!pcl_size) 
 	{
@@ -338,6 +359,8 @@ void ROS_IGTL_Bridge::SendPointCloud (const ros_igtl_bridge::igtlpointcloud::Con
 		pointE->SetPosition(msg->pointdata[i].x, msg->pointdata[i].y,msg->pointdata[i].z);		
 		pointMsg->AddPointElement(pointE);
 	}
+
+	pointMsg->SetTimeStamp(ts);	
 	pointMsg->Pack();
 	socket->Send(pointMsg->GetPackPointer(), pointMsg->GetPackSize());
 }
@@ -385,11 +408,16 @@ void ROS_IGTL_Bridge::ReceivePoints(igtl::MessageHeader * header)
 	}
 }
 //----------------------------------------------------------------------
-void ROS_IGTL_Bridge::SendImage(ros_igtl_bridge::igtlimage::ConstPtr imgmsg)
+void ROS_IGTL_Bridge::SendImage(const ros_igtl_bridge::igtlimage::ConstPtr imgmsg)
 {
     int   size[]     = {imgmsg->z_steps,imgmsg->y_steps,imgmsg->x_steps};       // image dimension
     float spacing[]  = {imgmsg->z_spacing,imgmsg->y_spacing,imgmsg->x_spacing};     // spacing (mm/pixel) 
 	int   scalarType = igtl::ImageMessage::TYPE_UINT8;
+
+	std_msgs::Header hdr = imgmsg->header;
+        igtl::TimeStamp::Pointer ts;
+	ts = igtl::TimeStamp::New();
+	ts->SetTime(hdr.stamp.sec, hdr.stamp.nsec);
 
 	igtl::ImageMessage::Pointer imgMsg = igtl::ImageMessage::New();
 	imgMsg->SetDimensions(size);
@@ -409,12 +437,13 @@ void ROS_IGTL_Bridge::SendImage(ros_igtl_bridge::igtlimage::ConstPtr imgmsg)
 
 	//------------------------------------------------------------
 	// Pack and send
+	imgMsg->SetTimeStamp(ts);
 	imgMsg->Pack();
 
 	socket->Send(imgMsg->GetPackPointer(), imgMsg->GetPackSize());
 }
 //----------------------------------------------------------------------
-void ROS_IGTL_Bridge::SendVideo(sensor_msgs::Image::ConstPtr imgmsg)
+void ROS_IGTL_Bridge::SendVideo(const sensor_msgs::Image::ConstPtr imgmsg)
 {
     cv_bridge::CvImagePtr cv_ptr;
     try
@@ -447,9 +476,14 @@ void ROS_IGTL_Bridge::SendVideo(sensor_msgs::Image::ConstPtr imgmsg)
 	cv::waitKey(3);
 	*/
 	
-    int   size[]     = {imgmsg->width,imgmsg->height,1};       // image dimension
-    float spacing[]  = {1,1,1};     // spacing (mm/pixel) 
+	int   size[]     = {imgmsg->width,imgmsg->height,1};       // image dimension
+	float spacing[]  = {1,1,1};     // spacing (mm/pixel) 
 	int   scalarType = igtl::ImageMessage::TYPE_UINT8;
+
+	std_msgs::Header hdr = imgmsg->header;
+        igtl::TimeStamp::Pointer ts;
+	ts = igtl::TimeStamp::New();
+	ts->SetTime(hdr.stamp.sec, hdr.stamp.nsec);
 
 	igtl::ImageMessage::Pointer imgMsg = igtl::ImageMessage::New();
 	imgMsg->SetDimensions(size);
@@ -478,6 +512,7 @@ void ROS_IGTL_Bridge::SendVideo(sensor_msgs::Image::ConstPtr imgmsg)
 
 	//------------------------------------------------------------
 	// Pack and send
+	imgMsg->SetTimeStamp(ts);
 	imgMsg->Pack();
 
 	socket->Send(imgMsg->GetPackPointer(), imgMsg->GetPackSize());
@@ -524,11 +559,19 @@ void ROS_IGTL_Bridge::ReceiveImage(igtl::MessageHeader * header)
 	image_pub.publish(img_msg);
 }
 //----------------------------------------------------------------------
-void ROS_IGTL_Bridge::SendPolyData(const char* name,vtkSmartPointer<vtkPolyData> polydata)
+void ROS_IGTL_Bridge::SendPolyData(const ros_igtl_bridge::igtlpolydata::ConstPtr& msg)
 {
+	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+	MsgToPolyData(msg,polydata);
+
+	std_msgs::Header hdr = msg->header;
+        igtl::TimeStamp::Pointer ts;
+	ts = igtl::TimeStamp::New();
+	ts->SetTime(hdr.stamp.sec, hdr.stamp.nsec);
+
 	igtl::PolyDataMessage::Pointer polyDataMsg;
 	polyDataMsg = igtl::PolyDataMessage::New();
-	polyDataMsg->SetDeviceName(name);	
+	polyDataMsg->SetDeviceName(msg->name.c_str());	
 	
 	// points
 	igtl::PolyDataPointArray::Pointer pointArray;
@@ -636,6 +679,7 @@ void ROS_IGTL_Bridge::SendPolyData(const char* name,vtkSmartPointer<vtkPolyData>
 		polyDataMsg->SetTriangleStrips(polyArray);
 	}
 	// pack and send
+	polyDataMsg->SetTimeStamp(ts);
 	polyDataMsg->Pack();
 	
 	socket->Send(polyDataMsg->GetPackPointer(), polyDataMsg->GetPackSize());
@@ -776,11 +820,17 @@ void ROS_IGTL_Bridge::ReceivePolyData(igtl::MessageHeader * header, vtkSmartPoin
 
 }
 //----------------------------------------------------------------------
-void ROS_IGTL_Bridge::SendString(const char* name, std::string stringmsg)
+void ROS_IGTL_Bridge::SendString(const ros_igtl_bridge::igtlstring::ConstPtr& msg)
 {
+        std_msgs::Header hdr = msg->header;
+        igtl::TimeStamp::Pointer ts;
+	ts = igtl::TimeStamp::New();
+	ts->SetTime(hdr.stamp.sec, hdr.stamp.nsec);
+
 	igtl::StringMessage::Pointer stringMsg = igtl::StringMessage::New();
-	stringMsg->SetDeviceName(name);
-	stringMsg->SetString(stringmsg.c_str());  
+	stringMsg->SetDeviceName(msg->name.c_str());
+	stringMsg->SetString(msg->data.c_str());  
+	stringMsg->SetTimeStamp(ts);
 	stringMsg->Pack();
 	//std::cout<<stringmsg.c_str()<< " sent"<<std::endl;
 	socket->Send(stringMsg->GetPackPointer(), stringMsg->GetPackSize());
