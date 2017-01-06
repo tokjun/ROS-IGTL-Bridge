@@ -372,18 +372,22 @@ void ROS_IGTL_Test::test_sending()
 	    ROS_INFO("s %d",img_msg->step);
 	    size_t size = img_msg->step* img_msg->height * 3;
 	    img_msg->data.resize(size);
+	    char * buf = new char[size];
 	    
 	    iterCount = nIter;
+	    generateRandomImageInt8(size, (char*)buf);
+	    
 	    while (iterCount > 0)
 	      {
 		img_msg->header.stamp = ros::Time::now();
-		//memcpy((char*)(&img_msg->data[0]),imgMsg->GetScalarPointer(),size); 
-		generateRandomImageInt8(size, (char*)&img_msg->data[0]);
+		// Simulate memory copy
+		memcpy((char*)(&img_msg->data[0]),buf,size); 
 		image_pub.publish(img_msg);
 
 		r.sleep();
 		iterCount --;
 	      }
+	    delete [] buf;
 	  }
 
 	std::string test_oct;
