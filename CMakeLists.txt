@@ -128,7 +128,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
- include_directories(include ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/include ${CMAKE_CURRENT_LIST_DIR}/testing/include)
+ include_directories(include ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/include ${CMAKE_CURRENT_LIST_DIR}/testing/include)
 
 ## Declare a C++ library
  add_library(ROS_IGTL_Bridge_Lib
@@ -136,6 +136,8 @@ catkin_package(
 	include/ROS_IGTL_Bridge.h
 
  )
+
+add_dependencies(ROS_IGTL_Bridge_Lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

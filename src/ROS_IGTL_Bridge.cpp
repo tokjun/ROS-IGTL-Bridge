@@ -54,7 +54,7 @@ ROS_IGTL_Bridge::ROS_IGTL_Bridge(int argc, char *argv[], const char* node_name)
 	sub_transform = nh->subscribe("IGTL_TRANSFORM_OUT", 10, &ROS_IGTL_Bridge::transformCallback,this);  
 	sub_string = nh->subscribe("IGTL_STRING_OUT", 20, &ROS_IGTL_Bridge::stringCallback,this); 
 	sub_image = nh->subscribe("IGTL_IMAGE_OUT", 1, &ROS_IGTL_Bridge::imageCallback,this); 
-	sub_video = nh->subscribe("IGTL_VIDEO_OUT", 1, &ROS_IGTL_Bridge::videoCallback,this); 
+	//sub_video = nh->subscribe("IGTL_VIDEO_OUT", 1, &ROS_IGTL_Bridge::videoCallback,this); 
 	sub_polydata = nh->subscribe("IGTL_POLYDATA_OUT", 1, &ROS_IGTL_Bridge::polydataCallback,this); 
 	
 	// start receiver thread
@@ -185,11 +185,11 @@ void ROS_IGTL_Bridge::imageCallback(const ros_igtl_bridge::igtlimage::ConstPtr& 
 {
 	SendImage(msg);
 }
-//----------------------------------------------------------------------
-void ROS_IGTL_Bridge::videoCallback(sensor_msgs::Image::ConstPtr msg)
-{
-	SendVideo(msg);
-}
+////----------------------------------------------------------------------
+//void ROS_IGTL_Bridge::videoCallback(sensor_msgs::Image::ConstPtr msg)
+//{
+//	SendVideo(msg);
+//}
 ////----------------------------------------------------------------------
 //void ROS_IGTL_Bridge::polydataCallback(const ros_igtl_bridge::igtlpolydata::ConstPtr& msg)
 //{

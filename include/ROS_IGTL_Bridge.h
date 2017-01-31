@@ -83,7 +83,7 @@ private:
 	ros::Subscriber sub_transform;
 	ros::Subscriber sub_polydata;
 	ros::Subscriber sub_image;
-	ros::Subscriber sub_video;
+	//ros::Subscriber sub_video;
 	ros::Subscriber sub_string;
 	
 	// Callbacks
@@ -93,7 +93,7 @@ private:
 	virtual void transformCallback(const ros_igtl_bridge::igtltransform::ConstPtr& msg);
 	virtual void stringCallback(const ros_igtl_bridge::igtlstring::ConstPtr& msg);
 	virtual void imageCallback(const ros_igtl_bridge::igtlimage::ConstPtr& msg);
-	virtual void videoCallback(sensor_msgs::Image::ConstPtr msg);
+	//virtual void videoCallback(sensor_msgs::Image::ConstPtr msg);
 	virtual void polydataCallback(const ros_igtl_bridge::igtlpolydata::ConstPtr& msg);
 
 	// Sending
