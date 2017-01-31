@@ -18,7 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 
-find_package(VTK REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -115,7 +114,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS  include ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/include ${VTK_INCLUDE_DIRS}   ${catkin_INCLUDE_DIRS}
+  INCLUDE_DIRS  include ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/include ${catkin_INCLUDE_DIRS}
   CATKIN_DEPENDS message_runtime
  # LIBRARIES lib
 #  CATKIN_DEPENDS other_catkin_pkg
@@ -129,7 +128,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
- include_directories(include ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/include ${CMAKE_CURRENT_LIST_DIR}/testing/include ${VTK_INCLUDE_DIRS})
+ include_directories(include ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/include ${CMAKE_CURRENT_LIST_DIR}/testing/include)
 
 ## Declare a C++ library
  add_library(ROS_IGTL_Bridge_Lib
@@ -154,17 +153,14 @@ add_executable(ROS_IGTL_Test testing/ROS_IGTL_Test.cpp testing/main_test.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(ROS_IGTL_Bridge ${catkin_LIBRARIES}  )
-target_link_libraries(ROS_IGTL_Bridge ${VTK_LIBRARIES})
 target_link_libraries(ROS_IGTL_Bridge ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/libOpenIGTLink.a)
 target_link_libraries(ROS_IGTL_Bridge ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/libigtlutil.a)
 
 target_link_libraries(ROS_IGTL_Bridge_Lib ${catkin_LIBRARIES})
-target_link_libraries(ROS_IGTL_Bridge_Lib ${VTK_LIBRARIES})
 target_link_libraries(ROS_IGTL_Bridge_Lib ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/libOpenIGTLink.a)
 target_link_libraries(ROS_IGTL_Bridge_Lib ${CMAKE_CURRENT_LIST_DIR}/OpenIGTLink/libigtlutil.a)
 
 target_link_libraries(ROS_IGTL_Test ${catkin_LIBRARIES}  )
-target_link_libraries(ROS_IGTL_Test ${VTK_LIBRARIES})
 target_link_libraries(ROS_IGTL_Test ROS_IGTL_Bridge_Lib)
 
 #############
