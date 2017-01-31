@@ -2,27 +2,27 @@
 #define ShowPolyData_H
 
 // VTK
-#include <vtkPointData.h>
-#include <vtkSmartPointer.h>
-#include <vtkVertexGlyphFilter.h>
-#include <vtkDataSetAttributes.h>
-#include <vtkPolyData.h>
-#include <vtkDelaunay2D.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkActor.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkProperty.h>
-#include <vtkTransform.h>
-#include <vtkTransformFilter.h>
-#include <vtkXMLPolyDataReader.h>
-#include <vtkCleanPolyData.h>
-#include <vtkAppendPolyData.h>
-#include <vtkAxesActor.h>
-#include <vtkCaptionActor2D.h>
-#include <vtkTextProperty.h>
-#include <vtkTextActor.h>
+//#include <vtkPointData.h>
+//#include <vtkSmartPointer.h>
+//#include <vtkVertexGlyphFilter.h>
+//#include <vtkDataSetAttributes.h>
+//#include <vtkPolyData.h>
+//#include <vtkDelaunay2D.h>
+//#include <vtkPolyDataMapper.h>
+//#include <vtkActor.h>
+//#include <vtkRenderer.h>
+//#include <vtkRenderWindow.h>
+//#include <vtkRenderWindowInteractor.h>
+//#include <vtkProperty.h>
+//#include <vtkTransform.h>
+//#include <vtkTransformFilter.h>
+//#include <vtkXMLPolyDataReader.h>
+//#include <vtkCleanPolyData.h>
+//#include <vtkAppendPolyData.h>
+//#include <vtkAxesActor.h>
+//#include <vtkCaptionActor2D.h>
+//#include <vtkTextProperty.h>
+//#include <vtkTextActor.h>
 
 //----------------------------------------------------------------------
 void Show_Polydata(vtkSmartPointer<vtkPolyData> polydata)

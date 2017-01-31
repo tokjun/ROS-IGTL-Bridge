@@ -7,7 +7,6 @@
 
    </node>
 <!-- start the test -->
-   <param name="test_pd" value="$(find ros_igtl_bridge)/testing/model.vtk" type="str"/>
    <param name="test_oct" value="$(find ros_igtl_bridge)/testing/oct_raw.cache" type="str"/>
    <node name="ROS_IGTL_TEST" pkg="ros_igtl_bridge" type="ROS_IGTL_Test"     output="screen">
    </node>
