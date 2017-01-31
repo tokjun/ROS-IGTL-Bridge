@@ -5,12 +5,12 @@
 #include "std_msgs/String.h"
 #include "sensor_msgs/Image.h"
 #include "geometry_msgs/Transform.h"
-// OpenCV Includes
-#include "image_transport/image_transport.h"
-#include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/image_encodings.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+//// OpenCV Includes
+//#include "image_transport/image_transport.h"
+//#include <cv_bridge/cv_bridge.h>
+//#include <sensor_msgs/image_encodings.h>
+//#include <opencv2/imgproc/imgproc.hpp>
+//#include <opencv2/highgui/highgui.hpp>
 // Boost Includes
 #include <boost/thread.hpp>   
 // Messages Includes
@@ -101,7 +101,7 @@ private:
 	virtual void SendPoint (const char* name,geometry_msgs::Point point);
 	virtual void SendPointCloud (const ros_igtl_bridge::igtlpointcloud::ConstPtr& msg);
 	virtual void SendImage(ros_igtl_bridge::igtlimage::ConstPtr imgmsg);
-	virtual void SendVideo(sensor_msgs::Image::ConstPtr imgmsg);
+	//virtual void SendVideo(sensor_msgs::Image::ConstPtr imgmsg);
 	virtual void SendPolyData(const char* name,vtkSmartPointer<vtkPolyData> polydata);
 	virtual void SendString(const char* name, std::string stringmsg);
 

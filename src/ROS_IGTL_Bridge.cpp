@@ -413,75 +413,75 @@ void ROS_IGTL_Bridge::SendImage(ros_igtl_bridge::igtlimage::ConstPtr imgmsg)
 
 	socket->Send(imgMsg->GetPackPointer(), imgMsg->GetPackSize());
 }
-//----------------------------------------------------------------------
-void ROS_IGTL_Bridge::SendVideo(sensor_msgs::Image::ConstPtr imgmsg)
-{
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(imgmsg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-      ROS_ERROR("cv_bridge exception: %s", e.what());
-      return;
-    }
-
-	cv::Mat img; 
-    cvtColor(cv_ptr->image,img, CV_RGB2GRAY);
-
-	cv_bridge::CvImage img_bridge;
-	sensor_msgs::Image img_msg; 
-
-	std_msgs::Header header; 
-	header.stamp = ros::Time::now(); 
-	img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::MONO8, img);
-	img_bridge.toImageMsg(img_msg); 
-	
-	sensor_msgs::Image::Ptr msg = boost::make_shared<sensor_msgs::Image>(img_msg);
-	
-	/* debug window
-	static const char WINDOW[] = "Image window";
-	cv::namedWindow(WINDOW);
-	cv::imshow(WINDOW, img);
-	cv::waitKey(3);
-	*/
-	
-    int   size[]     = {imgmsg->width,imgmsg->height,1};       // image dimension
-    float spacing[]  = {1,1,1};     // spacing (mm/pixel) 
-	int   scalarType = igtl::ImageMessage::TYPE_UINT8;
-
-	igtl::ImageMessage::Pointer imgMsg = igtl::ImageMessage::New();
-	imgMsg->SetDimensions(size);
-	imgMsg->SetSpacing(spacing);
-	imgMsg->SetScalarType(scalarType);
-	imgMsg->SetCoordinateSystem(2);
-	imgMsg->SetDeviceName("ROS_IGTL_Bridge_Video");
-	imgMsg->SetOrigin(0,0,0);
-	imgMsg->AllocateScalars();
-	//------------------------------------------------------------
-	std::cout<< msg->data.size()<<std::endl;
-	std::cout<< msg->step<<std::endl;
-	std::cout<< msg->height<<std::endl;
-	std::cout<< msg->width<<std::endl;
-
-	image_pub.publish(msg);
-
-	memcpy(imgMsg->GetScalarPointer(),(char*)(&msg->data[0]),msg->data.size());
-
-	igtl::Matrix4x4 matrixa;
-	igtl::IdentityMatrix(matrixa);
-	matrixa[0][0] = -1;
-	matrixa[1][1] = -1;
-
-	imgMsg->SetMatrix(matrixa);
-
-	//------------------------------------------------------------
-	// Pack and send
-	imgMsg->Pack();
-
-	socket->Send(imgMsg->GetPackPointer(), imgMsg->GetPackSize());
-}
+////----------------------------------------------------------------------
+//void ROS_IGTL_Bridge::SendVideo(sensor_msgs::Image::ConstPtr imgmsg)
+//{
+//    cv_bridge::CvImagePtr cv_ptr;
+//    try
+//    {
+//        cv_ptr = cv_bridge::toCvCopy(imgmsg, sensor_msgs::image_encodings::BGR8);
+//    }
+//    catch (cv_bridge::Exception& e)
+//    {
+//      ROS_ERROR("cv_bridge exception: %s", e.what());
+//      return;
+//    }
+//
+//	cv::Mat img; 
+//    cvtColor(cv_ptr->image,img, CV_RGB2GRAY);
+//
+//	cv_bridge::CvImage img_bridge;
+//	sensor_msgs::Image img_msg; 
+//
+//	std_msgs::Header header; 
+//	header.stamp = ros::Time::now(); 
+//	img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::MONO8, img);
+//	img_bridge.toImageMsg(img_msg); 
+//	
+//	sensor_msgs::Image::Ptr msg = boost::make_shared<sensor_msgs::Image>(img_msg);
+//	
+//	/* debug window
+//	static const char WINDOW[] = "Image window";
+//	cv::namedWindow(WINDOW);
+//	cv::imshow(WINDOW, img);
+//	cv::waitKey(3);
+//	*/
+//	
+//    int   size[]     = {imgmsg->width,imgmsg->height,1};       // image dimension
+//    float spacing[]  = {1,1,1};     // spacing (mm/pixel) 
+//	int   scalarType = igtl::ImageMessage::TYPE_UINT8;
+//
+//	igtl::ImageMessage::Pointer imgMsg = igtl::ImageMessage::New();
+//	imgMsg->SetDimensions(size);
+//	imgMsg->SetSpacing(spacing);
+//	imgMsg->SetScalarType(scalarType);
+//	imgMsg->SetCoordinateSystem(2);
+//	imgMsg->SetDeviceName("ROS_IGTL_Bridge_Video");
+//	imgMsg->SetOrigin(0,0,0);
+//	imgMsg->AllocateScalars();
+//	//------------------------------------------------------------
+//	std::cout<< msg->data.size()<<std::endl;
+//	std::cout<< msg->step<<std::endl;
+//	std::cout<< msg->height<<std::endl;
+//	std::cout<< msg->width<<std::endl;
+//
+//	image_pub.publish(msg);
+//
+//	memcpy(imgMsg->GetScalarPointer(),(char*)(&msg->data[0]),msg->data.size());
+//
+//	igtl::Matrix4x4 matrixa;
+//	igtl::IdentityMatrix(matrixa);
+//	matrixa[0][0] = -1;
+//	matrixa[1][1] = -1;
+//
+//	imgMsg->SetMatrix(matrixa);
+//
+//	//------------------------------------------------------------
+//	// Pack and send
+//	imgMsg->Pack();
+//
+//	socket->Send(imgMsg->GetPackPointer(), imgMsg->GetPackSize());
+//}
 //----------------------------------------------------------------------
 void ROS_IGTL_Bridge::ReceiveImage(igtl::MessageHeader * header)
 {
